@@ -136,7 +136,7 @@ class Multicoco(nn.Module):
             # soft Majority Vote, make these weights learnable for Model
             stacked_probs = torch.stack(logits_list, dim=0)  # (num_layers, batch, seq_len, vocab_size)
             final_probs = stacked_probs.mean(dim=0)
-            final_logits = torch.logit(final_probs, eps=1e-6)
+            voted_logits = torch.logit(final_probs, eps=1e-6)
             logits.append(voted_logits)
 
             next_compute_range = (
@@ -230,7 +230,7 @@ class Multicoco(nn.Module):
         # soft Majority Vote, make these weights learnable for Model
         stacked_probs = torch.stack(logits_list, dim=0)  # (num_layers, batch, seq_len, vocab_size)
         final_probs = stacked_probs.mean(dim=0)
-        final_logits = torch.logit(final_probs, eps=1e-6)
+        voted_logits = torch.logit(final_probs, eps=1e-6)
 
         logits.append(voted_logits)
 
