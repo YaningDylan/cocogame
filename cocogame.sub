@@ -1,0 +1,32 @@
+# HTCondor submit file
+# Provide HTCondor with the name of the Docker container
+universe = vanilla
+# Specify your executable (single binary or a script that runs several
+#  commands) and arguments to be passed to jobs.
+executable = cocogame.sh
+# Specify the name of the log, standard error, and standard output (or "screen output") files. Wherever you see $(Cluster), HTCondor will insert the
+#  queue number assigned to this set of jobs at the time of submission.
+log = logs/cocogame/$(Cluster)_$(Process).log
+error = logs/cocogame/$(Cluster)_$(Process).err
+output = logs/cocogame/$(Cluster)_$(Process).out
+# Transfer the source files
+transfer_input_files = cocogame/
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_output_files = cocogame/models/multiLayer
++WantGPULab = true
++GPUJobLength = "medium"
+# Tell HTCondor requirements (e.g., operating system) your job needs,           
+# what amount of compute resources each job will need on the computer where it runs.
+request_cpus = 2
+request_memory = 64GB
+request_disk = 150GB
+request_gpus = 2
+gpus_minimum_capability = 8.0
+# gpus_minimum_memory = 80GB
+# This docker image was built for CUDA >= 12.1
+# Requirements = (Target.CUDADriverVersion >= 12.1)
++WantFlocking = false
++WantGlidein = false
+# Tell HTCondor to run our job:
+queue
