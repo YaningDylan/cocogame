@@ -187,6 +187,12 @@ def main():
         configs.coconut = False
 
     if configs.coconut:
+        
+        
+        
+        
+        
+        
         model = Coconut(model, latent_id, start_id, end_id, tokenizer.eos_token_id, configs.use_all_hidden_states, configs.integration_type, configs.last_n_layer)
 
     if configs.load_model_path != "None" and not loaded:
@@ -244,7 +250,13 @@ def main():
     total_train_steps = 0
 
     if not configs.debug and not configs.only_eval and rank == 0:
-        wandb_run = wandb.init(project=configs.project, name=configs.name)
+        if configs.last_n_layer > 1:
+            wandb_name = f"{configs.name}-vote-{configs.last_n_layer}"  
+        elif configs.use_all_hidden_states == True:
+            wandb_name = f"{configs.name}-mix-{configs.integration_type}"
+        else:
+            wandb_name = configs.name
+        wandb_run = wandb.init(project=configs.project, name=wandb_name)
         wandb_run.config.update(configs, allow_val_change=True)
         text_table = wandb.Table(columns=["step", "text"])
 
@@ -405,6 +417,10 @@ def main():
                         "train/loss": loss.detach().float()
                         * configs.gradient_accumulation_steps,
                     }
+                    if configs.use_all_hidden_states:
+                        current_weights = outputs.weights.detach().cpu().tolist()
+                        layer_weight_dict = {f"state_{i}": weight for i, weight in enumerate(current_weights)}
+                        log_dict["train/layer_weights"] = layer_weight_dict
                     wandb_run.log(log_dict)
 
                 pbar.set_description(

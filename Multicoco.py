@@ -9,7 +9,7 @@ from transformers.models.gpt2 import GPT2LMHeadModel
 
 from layer_adapter import MultiLayerIntegrator
 
-Outputs = namedtuple("Outputs", ["loss", "inputs_embeds", "logits"])
+Outputs = namedtuple("Outputs", ["loss", "inputs_embeds", "logits", "weights"])
 MAX_N_LATENT = 8
 
 
@@ -152,11 +152,13 @@ class Multicoco(nn.Module):
             
             # integration all the hidden states
             if self.use_all_hidden_states:
-                hidden_states_list = [h for h in all_hidden_states]
-                hidden_states, weight = self.layerIntegrator(hidden_states_list)
+                hidden_states_list = hidden_states_list = list(all_hidden_states)[1:]  # remove first embedding layer
+                hidden_states, weights = self.layerIntegrator(hidden_states_list)
+                
             # or using multi-layer combined majority vote
             else:
                 hidden_states = all_hidden_states[-1] # make sure hidden state within total hidden state
+                weights = None
                 
             
             kv_cache = outputs.past_key_values
@@ -245,7 +247,7 @@ class Multicoco(nn.Module):
             shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
         )
 
-        return Outputs(loss=loss, inputs_embeds=inputs_embeds, logits=logits)
+        return Outputs(loss=loss, inputs_embeds=inputs_embeds, logits=logits, weights=weights)
 
     def train(self):
         self.base_causallm.train()
